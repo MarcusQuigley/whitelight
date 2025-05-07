@@ -1,0 +1,27 @@
+# Binaries
+*.exe
+*.o
+*.a
+
+# Test binary and results
+*_test
+*.test
+testdata
+
+# Dependencies (if using vendoring or modules)
+/vendor/
+go.sum
+
+# IDE specific files
+.idea/
+*.iml
+*.vscode/
+
+# OS or Env specific files
+._*
+.DS_Store
+
+# Temporary files
+*~
+# Log Files
+*.log
