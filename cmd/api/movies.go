@@ -6,20 +6,32 @@ import (
 	"time"
 
 	"whitelight.quigley.net/internal/data"
+	"whitelight.quigley.net/internal/validator"
 )
 
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title   string   `json:"title"`
-		Year    int32    `json:"year"`
-		Runtime int32    `json:"runtime"`
-		Genres  []string `json:"genres"`
+		Title   string       `json:"title"`
+		Year    int32        `json:"year"`
+		Runtime data.Runtime `json:"runtime"`
+		Genres  []string     `json:"genres"`
 	}
 	e := app.readJSON(w, r, &input) //json.NewDecoder(r.Body).Decode(&input)
 	if e != nil {
 		app.badRequestResponse(w, r, e)
 		return
 	}
+	movie := &data.Movie{
+		Title:   input.Title,
+		Year:    input.Year,
+		Runtime: input.Runtime,
+		Genres:  input.Genres,
+	}
+	v := validator.New()
+	if data.ValidateMovie(v, movie); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+	}
+
 	fmt.Fprintf(w, "%+v\n", input)
 
 }
