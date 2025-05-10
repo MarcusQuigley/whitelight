@@ -40,8 +40,56 @@ func TestShowMovies(t *testing.T) {
 	})
 }
 
-// func assertStatus(t testing.TB, got, want int) {
-// 	if got != want {
-// 		t.Errorf("wrong status code: got %d want %d", got, want)
+// func TestInsertMovie(t *testing.T) {
+// 	t.Run("insert a movie", func(t *testing.T) {
+// 		input := map[string]interface{}{
+// 			"title":   "The Matrix",
+// 			"year":    1999,
+// 			"runtime": "120 mins",
+// 			"genres":  []string{"action", "sci-fi"},
+// 		}
+
+// 	setupMock:= func(m *mockMovieModel) {
+// 			m.insertFunc = func(movie *data.Movie) error {
+// 				movie.ID = 1
+// 				movie.CreatedAt = time.Now()
+// 				movie.Version = 1
+// 				return nil
+// 			}
+// 		}
+// 			//expectedStatus: http.StatusCreated,
+// 			app := &application{
+// 			models: &mockModels{
+// 				movies: &mockMovieModel{},
+// 			},
+// 		}
+
+// 		setupMock(app.models.Movies.(*mockMovieModel))
+
+// 		body, e := json.Marshal(&input)
+// 		if e != nil {
+// 			t.Fatal(e)
+// 		}
+// 		request := httptest.NewRequest(http.MethodPost, "/v1/movies", bytes.NewReader(body))
+// 		response := httptest.NewRecorder()
+
+// 		handler := http.HandlerFunc(app.createMovieHandler)
+// 		handler.ServeHTTP(response, request)
+// 		assertStatus(t, response.Code, http.StatusCreated)
+// 	})
+// }
+
+// type mockModels struct {
+// 	movies *mockMovieModel
+// }
+
+// type mockMovieModel struct {
+// 	insertFunc func(*data.Movie) error
+// }
+
+// func (m *mockMovieModel) Insert(movie *data.Movie) error {
+// 	if m.insertFunc != nil {
+// 		return m.insertFunc(movie)
 // 	}
+// 	return nil
 // }

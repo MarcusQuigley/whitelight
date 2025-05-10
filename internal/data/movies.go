@@ -1,8 +1,11 @@
 package data
 
 import (
+	"database/sql"
+	"errors"
 	"time"
 
+	"github.com/lib/pq"
 	"whitelight.quigley.net/internal/validator"
 )
 
@@ -14,6 +17,62 @@ type Movie struct {
 	Runtime   Runtime   `json:"runtime,omitzero"`
 	Genres    []string  `json:"genres,omitzero"`
 	Version   int32     `json:"version"`
+}
+
+type MovieModel struct {
+	DB *sql.DB
+}
+
+func (mm *MovieModel) Insert(movie *Movie) error {
+	query := `INSERT INTO Movies(title, year, runtime, genres)
+			 VALUES($1, $2, $3, $4)
+			RETURNING id, created_at, version`
+
+	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array([]int{123, 12})}
+
+	return mm.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
+}
+
+func (mm *MovieModel) Update(movie *Movie) error {
+	query := `UPDATE Movies (title, year, runtime, genres)
+			 VALUES($1, $2, $3, $4)
+			RETURNING id, created_at, version`
+
+	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
+
+	return mm.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
+}
+
+func (mm *MovieModel) Get(id int64) (*Movie, error) {
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+	query := `SELECT id, created_at, title, year, runtime, genres, version
+			  FROM Movies WHERE id = $1`
+	var movie Movie
+
+	e := mm.DB.QueryRow(query, id).Scan(
+		&movie.ID,
+		&movie.CreatedAt,
+		&movie.Title,
+		&movie.Year,
+		&movie.Runtime,
+		pq.Array(&movie.Genres),
+		&movie.Version,
+	)
+	if e != nil {
+		switch {
+		case errors.Is(e, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, e
+		}
+	}
+	return &movie, nil
+}
+
+func (mm *MovieModel) Delete(id int64) error {
+	return nil
 }
 
 func ValidateMovie(v *validator.Validator, movie *Movie) {
