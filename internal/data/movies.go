@@ -33,14 +33,40 @@ func (mm *MovieModel) Insert(movie *Movie) error {
 	return mm.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
+func (mm *MovieModel) Delete(id int64) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+	query := `DELETE FROM Movies WHERE id = $1`
+	result, e := mm.DB.Exec(query, id)
+	if e != nil {
+		return e
+	}
+	rowsAffected, e := result.RowsAffected()
+	if e != nil {
+		return e
+	}
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+	return nil
+}
+
 func (mm *MovieModel) Update(movie *Movie) error {
-	query := `UPDATE Movies (title, year, runtime, genres)
-			 VALUES($1, $2, $3, $4)
-			RETURNING id, created_at, version`
+	query := `UPDATE Movies 
+			  SET title = $1, year = $2, runtime = $3, genres = $4, version = version + 1
+			  WHERE id = $5
+			  RETURNING version`
 
-	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
+	args := []any{
+		movie.Title,
+		movie.Year,
+		movie.Runtime,
+		pq.Array(movie.Genres),
+		movie.ID,
+	}
 
-	return mm.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
+	return mm.DB.QueryRow(query, args...).Scan(&movie.Version)
 }
 
 func (mm *MovieModel) Get(id int64) (*Movie, error) {
@@ -69,10 +95,6 @@ func (mm *MovieModel) Get(id int64) (*Movie, error) {
 		}
 	}
 	return &movie, nil
-}
-
-func (mm *MovieModel) Delete(id int64) error {
-	return nil
 }
 
 func ValidateMovie(v *validator.Validator, movie *Movie) {
